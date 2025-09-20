@@ -21,7 +21,8 @@
 .board-header-left {
     margin-right: 2rem; /* adjustable spacing */
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .board-title {

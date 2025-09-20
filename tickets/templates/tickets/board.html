@@ -11,13 +11,13 @@
     <div class="board-header">
         <div class="board-header-left">
             <h1 class="board-title">{{ board.name }}</h1>
-        </div>
-        <div class="ticket-type-filters">
+            <div class="ticket-type-filters below-title">
             <button type="button" class="filter-btn active" data-filter="all">All</button>
             <button type="button" class="filter-btn" data-filter="epic">Epics</button>
             <button type="button" class="filter-btn" data-filter="ticket">Tickets</button>
             <button type="button" class="filter-btn" data-filter="bug">Bugs</button>
             <small class="filter-hint">Select up to 2 types. "All" toggles everything.</small>
+            </div>
         </div>
         <div class="theme-picker" style="margin-left:auto; display:flex; align-items:center; gap:.5rem;">
             <label for="theme-selector" style="font-size:.75rem; opacity:.7;">Theme:</label>
@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 <style>
     .ticket-type-filters { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    .ticket-type-filters.below-title { margin-left:0; margin-top:.75rem; }
     .ticket-type-filters .filter-btn { border:1px solid #ccc; background:#f7f7f7; padding:.35rem .7rem; border-radius:4px; cursor:pointer; font-size:.85rem; }
     .ticket-type-filters .filter-btn.active { background:#004b9a; color:#fff; border-color:#004b9a; }
     .ticket-type-filters .filter-btn:focus { outline:2px solid #004b9a; outline-offset:1px; }
