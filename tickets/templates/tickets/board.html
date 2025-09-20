@@ -10,10 +10,6 @@
 <div class="board-container">
     <div class="board-header">
         <h1>{{ board.name }}</h1>
-        <a href="{% url 'tickets:ticket_new' board.id %}" class="new-ticket-nav" style="margin-left:1rem;">
-            <i class="fas fa-plus"></i>
-            New Ticket
-        </a>
         <div class="ticket-type-filters">
             <button type="button" class="filter-btn active" data-filter="all">All</button>
             <button type="button" class="filter-btn" data-filter="epic">Epics</button>
