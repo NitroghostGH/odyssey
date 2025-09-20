@@ -17,6 +17,19 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Add spacing between title and filters */
+.board-header-left {
+    margin-right: 2rem; /* adjustable spacing */
+    display: flex;
+    align-items: center;
+}
+
+.board-title {
+    margin: 0;
+    padding: 0;
+    font-size: 1.75rem;
+}
+
 .board-controls {
     display: flex;
     gap: 1rem;

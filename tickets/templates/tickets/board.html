@@ -9,7 +9,9 @@
 {% csrf_token %}
 <div class="board-container">
     <div class="board-header">
-        <h1>{{ board.name }}</h1>
+        <div class="board-header-left">
+            <h1 class="board-title">{{ board.name }}</h1>
+        </div>
         <div class="ticket-type-filters">
             <button type="button" class="filter-btn active" data-filter="all">All</button>
             <button type="button" class="filter-btn" data-filter="epic">Epics</button>
@@ -89,7 +91,19 @@
 document.addEventListener('DOMContentLoaded', function(){
     const buttons = Array.from(document.querySelectorAll('.ticket-type-filters .filter-btn'));
     const ticketCards = () => Array.from(document.querySelectorAll('.ticket'));
-    let activeTypes = new Set(['all']);
+    const boardId = '{{ board.id }}';
+    const STORAGE_KEY = `board_filters_${boardId}`;
+    function loadSaved(){
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if(!raw) return null;
+            const arr = JSON.parse(raw);
+            if(Array.isArray(arr) && arr.every(v => ['all','epic','ticket','bug'].includes(v))) return arr;
+        } catch(e){ /* ignore */ }
+        return null;
+    }
+    const saved = loadSaved();
+    let activeTypes = new Set(saved && saved.length ? saved : ['all']);
 
     function applyFilters(){
         if(activeTypes.has('all') || activeTypes.size === 0){
@@ -109,6 +123,13 @@ document.addEventListener('DOMContentLoaded', function(){
             const on = activeTypes.has('all') ? (f==='all') : activeTypes.has(f);
             btn.classList.toggle('active', on);
         });
+    }
+
+    function persist(){
+        try {
+            const arr = Array.from(activeTypes);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        } catch(e){ /* ignore quota */ }
     }
 
     buttons.forEach(btn => {
@@ -136,11 +157,13 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             updateButtonStates();
             applyFilters();
+            persist();
         });
     });
 
     updateButtonStates();
     applyFilters();
+    persist();
 });
 </script>
 <style>
