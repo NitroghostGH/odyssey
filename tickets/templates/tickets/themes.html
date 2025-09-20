@@ -1,0 +1,174 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block title %}Themes - Odyssey{% endblock %}
+
+{% block extra_css %}
+<style>
+  .themes-wrapper { max-width: 1100px; margin:0 auto; display:grid; grid-template-columns: 300px 1fr; gap:2rem; }
+  @media (max-width: 900px){ .themes-wrapper { grid-template-columns: 1fr; } }
+  .theme-groups { display:flex; flex-direction:column; gap:1.25rem; }
+  .theme-section { background: var(--surface-color); border:1px solid var(--border-color); border-radius:8px; padding:1rem 1.2rem; }
+  .theme-section h3 { margin:0 0 .75rem 0; font-size:1rem; letter-spacing:.5px; text-transform:uppercase; opacity:.7; }
+  .theme-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.5rem; }
+  .theme-item { display:flex; align-items:center; justify-content:space-between; background: var(--background-color); border:1px solid var(--border-color); padding:.55rem .65rem; border-radius:6px; gap:.75rem; transition: background .2s, border-color .2s; }
+  .theme-item.active { border-color: var(--accent-color); box-shadow:0 0 0 2px rgba(0,0,0,.15); }
+  .theme-item:hover { background: var(--surface-color); }
+  .theme-name { font-size:.85rem; font-weight:500; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge { font-size:.6rem; padding:.2rem .45rem; border-radius:10px; background: var(--info-color); color: var(--surface-color); text-transform:uppercase; letter-spacing:.5px; }
+  .theme-actions { display:flex; gap:.4rem; }
+  .btn-xs { font-size:.65rem; padding:.35rem .55rem; border:1px solid var(--border-color); background: var(--surface-color); color: var(--text-color); border-radius:4px; cursor:pointer; }
+  .btn-xs:hover { border-color: var(--accent-color); }
+  .btn-danger { background: var(--danger-color); color:#fff; border-color: var(--danger-color); }
+  .btn-danger:hover { filter:brightness(1.1); }
+  .preview-pane { background: var(--surface-color); border:1px solid var(--border-color); border-radius:8px; padding:1.25rem 1.5rem; }
+  .preview-pane h2 { margin-top:0; }
+  .preview-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap:1rem; margin-top:1rem; }
+  .color-swatch { border:1px solid var(--border-color); border-radius:6px; padding:.5rem; font-size:.65rem; display:flex; flex-direction:column; gap:.4rem; }
+  .color-sample { height:32px; border-radius:4px; border:1px solid rgba(0,0,0,.15); }
+  .empty-hint { font-size:.75rem; opacity:.6; }
+  .selection-hint { font-size:.65rem; opacity:.6; margin-top:.5rem; }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem; }
+  .toolbar a.btn-create { background: var(--primary-color); color: var(--surface-color); padding:.5rem .85rem; text-decoration:none; font-size:.8rem; border-radius:4px; }
+  .toolbar a.btn-create:hover { filter:brightness(1.1); }
+  /* Modal */
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:2000; }
+  .modal { background: var(--surface-color); border:1px solid var(--border-color); border-radius:8px; padding:1.2rem 1.4rem; width: min(400px, 92%); box-shadow:0 4px 12px rgba(0,0,0,.3); }
+  .modal h4 { margin:0 0 .75rem 0; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:.6rem; margin-top:1rem; }
+  .hidden { display:none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0; font-size:1.5rem;">Themes</h1>
+  <a href="{% url 'theme-creator' %}" class="btn-create"><i class="fas fa-plus"></i> Create Theme</a>
+</div>
+<div class="themes-wrapper" data-pref="{{ user_theme.id|default:'' }}">
+  <div class="theme-groups" id="theme-groups" data-fetch-url="{% url 'get_themes' %}" data-set-pref-url="{% url 'set_theme_preference' %}">
+    <div class="theme-section" id="user-themes">
+      <h3>Your Themes</h3>
+      <ul class="theme-list" data-scope="user"></ul>
+      <div class="empty-hint hidden" data-empty-user>You have no themes yet.</div>
+    </div>
+    <div class="theme-section" id="public-themes">
+      <h3>Public Themes</h3>
+      <ul class="theme-list" data-scope="public"></ul>
+      <div class="empty-hint hidden" data-empty-public>No public themes available.</div>
+    </div>
+    <div class="selection-hint">Click "Select" to apply a theme. Your preference persists.</div>
+  </div>
+  <div class="preview-pane">
+    <h2>Preview</h2>
+    <p class="preview-name" style="font-size:.85rem; opacity:.7; margin:0 0 .5rem 0;">Select a theme…</p>
+    <div class="preview-grid" id="preview-grid"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="delete-modal">
+  <div class="modal">
+    <h4>Delete Theme</h4>
+    <p style="font-size:.8rem;">Are you sure you want to delete <strong id="del-theme-name"></strong>? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-xs" data-close>Cancel</button>
+      <button class="btn-xs btn-danger" id="confirm-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const groupsEl = document.getElementById('theme-groups');
+  const userList = groupsEl.querySelector('ul[data-scope=user]');
+  const publicList = groupsEl.querySelector('ul[data-scope=public]');
+  const previewGrid = document.getElementById('preview-grid');
+  const previewName = document.querySelector('.preview-name');
+  const modal = document.getElementById('delete-modal');
+  const delNameEl = document.getElementById('del-theme-name');
+  const confirmBtn = document.getElementById('confirm-delete');
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  let deleteTarget = null; // {id, li}
+  let currentActiveId = groupsEl.dataset.pref;
+
+  function fetchThemes(){
+    fetch(groupsEl.dataset.fetchUrl).then(r=>r.json()).then(data => {
+      renderList(userList, data.user_themes || [], true);
+      renderList(publicList, data.public_themes || [], false);
+      userList.classList.toggle('has-items', userList.children.length>0);
+      publicList.classList.toggle('has-items', publicList.children.length>0);
+      document.querySelector('[data-empty-user]').classList.toggle('hidden', userList.children.length>0);
+      document.querySelector('[data-empty-public]').classList.toggle('hidden', publicList.children.length>0);
+    }).catch(err=>console.error('Fetch themes failed', err));
+  }
+
+  function renderList(container, themes, canDelete){
+    container.innerHTML='';
+    themes.forEach(t => {
+      const li = document.createElement('li');
+      li.className='theme-item';
+      li.dataset.id = t.id;
+      if(String(t.id)===String(currentActiveId)) li.classList.add('active');
+      li.innerHTML = `<span class="theme-name" title="${t.name}">${t.name}</span>`+
+        `${t.is_public?'<span class="badge">PUBLIC</span>':''}`+
+  `<div class="theme-actions">`+
+  `<button class="btn-xs" data-select>Select</button>`+
+  `${canDelete?`<a class="btn-xs" data-edit href="${window.location.origin || ''}{% url 'theme-creator' %}?edit=${t.id}">Edit</a>`:''}`+
+  `${canDelete?'<button class="btn-xs btn-danger" data-delete>Delete</button>':''}`+
+  `</div>`;
+      li.addEventListener('click', e => { if(e.target.closest('[data-select]')){ selectTheme(t, li); } else if(e.target.closest('[data-delete]')) { openDelete(t, li); } else { previewTheme(t); } });
+      container.appendChild(li);
+    });
+  }
+
+  function previewTheme(theme){
+    previewName.textContent = theme.name;
+    previewGrid.innerHTML = '';
+    const colors = theme.colors || {};
+    Object.entries(colors).forEach(([k,v]) => {
+      const div = document.createElement('div');
+      div.className='color-swatch';
+      div.innerHTML = `<div class="color-sample" style="background:${v}"></div><div>${k}<br><code>${v}</code></div>`;
+      previewGrid.appendChild(div);
+    });
+  }
+
+  function selectTheme(theme, li){
+    fetch(groupsEl.dataset.setPrefUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json','X-CSRFToken':csrftoken },
+      body: JSON.stringify({ theme_id: theme.id })
+    }).then(r=>r.json()).then(resp => {
+      if(!resp.success){ console.error('Set pref failed'); return; }
+      currentActiveId = theme.id;
+      document.querySelectorAll('.theme-item').forEach(el=>el.classList.toggle('active', String(el.dataset.id)===String(theme.id)));
+      if(window.theme){ window.theme.applyTheme(theme.colors || {}); }
+      previewTheme(theme);
+    });
+  }
+
+  function openDelete(theme, li){
+    deleteTarget = { theme, li };
+    delNameEl.textContent = theme.name;
+    modal.classList.remove('hidden');
+  }
+
+  function closeModal(){ modal.classList.add('hidden'); deleteTarget=null; }
+  modal.addEventListener('click', e => { if(e.target===modal || e.target.hasAttribute('data-close')) closeModal(); });
+  confirmBtn.addEventListener('click', () => {
+    if(!deleteTarget) return;
+    fetch(`/api/themes/${deleteTarget.theme.id}/delete/`, { method:'DELETE', headers:{'X-CSRFToken':csrftoken} })
+      .then(r=>r.json()).then(resp => {
+        if(resp.success){ deleteTarget.li.remove(); if(String(deleteTarget.theme.id)===String(currentActiveId)){ currentActiveId=''; previewName.textContent='Select a theme…'; previewGrid.innerHTML=''; } }
+        closeModal();
+      }).catch(()=>closeModal());
+  });
+
+  fetchThemes();
+})();
+</script>
+{% endblock %}
