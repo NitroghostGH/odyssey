@@ -22,17 +22,18 @@ class TicketForm(forms.ModelForm):
         (9, '9 – Essential (Critical for objectives)'),
         (10, '10 – VITAL (Mission critical)'),
     ]
+    # Urgency now framed as "time remaining before it must be done" (10 = right now)
     URGENCY_CHOICES = [
-        (1, '1 – Minimal (No time pressure)'),
-        (2, '2 – Very Low (Can wait)'),
-        (3, '3 – Low (Low time sensitivity)'),
-        (4, '4 – Medium-Low (Some flexibility)'),
-        (5, '5 – Medium (Soon)'),
-        (6, '6 – Medium-High (Schedule attention)'),
-        (7, '7 – High (Timely action)'),
-        (8, '8 – Very High (Time sensitive)'),
-        (9, '9 – Urgent (Immediate attention)'),
-        (10, '10 – CRITICAL (Immediate action required)'),
+        (1, '1 – No time constraint (Backlog / whenever)'),
+        (2, '2 – > 1 Quarter (Far future – schedule later)'),
+        (3, '3 – 1–3 Months (Long runway)'),
+        (4, '4 – Several Weeks (Plan in upcoming cycles)'),
+        (5, '5 – 1–2 Weeks (Should land this or next sprint)'),
+        (6, '6 – A Few Days (Needs attention soon)'),
+        (7, '7 – This Week (Time shrinking)'),
+        (8, '8 – Next 1–2 Days (High pressure)'),
+        (9, '9 – Today (Very urgent – prioritize)'),
+        (10, '10 – NOW (Immediate action required)'),
     ]
 
     class Meta:
@@ -54,7 +55,8 @@ class TicketForm(forms.ModelForm):
         self.fields['urgency'] = forms.ChoiceField(
             choices=self.URGENCY_CHOICES,
             required=True,
-            label='Urgency (1-10)'
+            label='Urgency (1-10 – Time Pressure)',
+            help_text='How soon does this require completion? 10 = now / immediate, 1 = no defined deadline.'
         )
 
         # Pre-select existing numeric values if editing
