@@ -6,17 +6,21 @@ class Theme {
     }
 
     applyTheme(theme) {
+        // Support both API shapes: { primary_color: '#..' } and stored user theme { primary: '#..' }
+        function pick(obj, primaryKey, fallbackKey){
+            return obj[primaryKey] || obj[fallbackKey];
+        }
         const vars = {
-            '--primary-color': theme.primary_color || '#bb86fc',
-            '--secondary-color': theme.secondary_color || '#6649a8',
-            '--background-color': theme.background_color || '#1a1625',
-            '--surface-color': theme.surface_color || '#251f35',
-            '--text-color': theme.text_color || '#e1e1e6',
-            '--accent-color': theme.accent_color || '#985eff',
-            '--border-color': theme.border_color || '#332b45',
-            '--danger-color': theme.danger_color || '#cf6679',
-            '--success-color': theme.success_color || '#03dac6',
-            '--info-color': theme.info_color || '#8bb4fe'
+            '--primary-color': pick(theme,'primary_color','primary') || '#bb86fc',
+            '--secondary-color': pick(theme,'secondary_color','secondary') || '#6649a8',
+            '--background-color': pick(theme,'background_color','background') || '#1a1625',
+            '--surface-color': pick(theme,'surface_color','surface') || '#251f35',
+            '--text-color': pick(theme,'text_color','text') || '#e1e1e6',
+            '--accent-color': pick(theme,'accent_color','accent') || '#985eff',
+            '--border-color': pick(theme,'border_color','border') || '#332b45',
+            '--danger-color': pick(theme,'danger_color','danger') || '#cf6679',
+            '--success-color': pick(theme,'success_color','success') || '#03dac6',
+            '--info-color': pick(theme,'info_color','info') || '#8bb4fe'
         };
 
         let cssText = ':root {\n';

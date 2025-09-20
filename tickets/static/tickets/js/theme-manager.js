@@ -32,6 +32,8 @@ class ThemeManager {
             const response = await fetch(`/api/themes/${themeId}/`);
             if (!response.ok) throw new Error('Failed to load theme');
             const data = await response.json();
+            // Attach raw colors object on window for theme creator prefill
+            window.__activeThemeColors = data.colors || {};
             window.theme.applyTheme(data.colors || {});
             this.saveThemePreference(themeId);
         } catch (error) {

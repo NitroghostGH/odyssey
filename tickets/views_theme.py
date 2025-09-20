@@ -20,7 +20,11 @@ def theme_creator(request):
             'background': request.POST.get('background-color'),
             'surface': request.POST.get('surface-color'),
             'text': request.POST.get('text-color'),
-            'accent': request.POST.get('accent-color')
+            'accent': request.POST.get('accent-color'),
+            'border': request.POST.get('border-color'),
+            'danger': request.POST.get('danger-color'),
+            'success': request.POST.get('success-color'),
+            'info': request.POST.get('info-color')
         }
         
         if not theme_name:
@@ -37,15 +41,32 @@ def theme_creator(request):
         messages.success(request, f'Theme "{theme_name}" created successfully!')
         return redirect('board-view', board_id=request.GET.get('next', 1))
         
+    # Use active theme if one is set (preference then latest user theme) for prefill
+    active = None
+    try:
+        pref = request.user.theme_preference
+        if pref and pref.theme:
+            active = pref.theme
+    except ThemePreference.DoesNotExist:  # type: ignore[attr-defined]
+        active = None
+    if not active:
+        active = UserTheme.objects.filter(user=request.user).order_by('-updated_at').first()
+    base_defaults = {
+        'primary': '#007bff',
+        'secondary': '#6c757d',
+        'background': '#ffffff',
+        'surface': '#f8f9fa',
+        'text': '#212529',
+        'accent': '#28a745'
+    }
+    if active and isinstance(active.colors, dict):
+        # Merge active colors over defaults (supports partial dicts)
+        merged = {**base_defaults, **active.colors}
+    else:
+        merged = base_defaults
     return render(request, 'tickets/theme_creator.html', {
-        'default_colors': {
-            'primary': '#007bff',
-            'secondary': '#6c757d',
-            'background': '#ffffff',
-            'surface': '#f8f9fa',
-            'text': '#212529',
-            'accent': '#28a745'
-        }
+        'default_colors': merged,
+        'active_theme': active
     })
 
 @login_required

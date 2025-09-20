@@ -19,7 +19,8 @@ def ticket_new(request, board_id):
         if form.is_valid():
             ticket = form.save(commit=False)
             ticket.board = board
-            ticket.created_by = request.user
+            # 'created_by' field was removed from the Ticket model; keep updated_by for audit trail if needed
+            ticket.updated_by = request.user
             ticket.save()
             TicketActivity.objects.create(
                 ticket=ticket,
@@ -64,8 +65,12 @@ def board_view(request, board_id):
     board = get_object_or_404(Board, id=board_id)
     tickets = Ticket.objects.filter(board=board).order_by('sort_order')
     user_theme = None
-    pref = getattr(request.user, 'theme_preference', None)
-    if pref and pref.theme:
+    # Accessing reverse one-to-one relation can raise ThemePreference.DoesNotExist
+    try:
+        pref = request.user.theme_preference  # reverse OneToOne descriptor
+    except ThemePreference.DoesNotExist:  # type: ignore[attr-defined]
+        pref = None
+    if pref and getattr(pref, 'theme', None):
         user_theme = pref.theme
     else:
         # fallback: latest user-owned theme
@@ -92,7 +97,8 @@ def board_view(request, board_id):
         'recent_activity': recent_activity,
         'user_theme': user_theme,
         'available_user_themes': all_user_themes,
-        'available_public_themes': public_themes
+        'available_public_themes': public_themes,
+        'active_theme_colors': getattr(user_theme, 'colors', {}) if user_theme else {}
     })
 
 @login_required
@@ -138,7 +144,6 @@ def ticket_edit(request, ticket_id):
         'title': 'Edit Ticket'
     })
 
-@login_required
 @login_required
 def update_ticket_status(request):
     if request.method != 'POST':

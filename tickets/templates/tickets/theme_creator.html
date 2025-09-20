@@ -97,6 +97,38 @@
                         <input type="text" class="color-hex" data-for="accent-color" value="{{ default_colors.accent }}">
                     </div>
                 </div>
+
+                <div class="color-group">
+                    <label for="border-color">Border Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="border-color" name="border-color" value="{{ default_colors.border|default:'#332b45' }}">
+                        <input type="text" class="color-hex" data-for="border-color" value="{{ default_colors.border|default:'#332b45' }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="danger-color">Danger Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="danger-color" name="danger-color" value="{{ default_colors.danger|default:'#cf6679' }}">
+                        <input type="text" class="color-hex" data-for="danger-color" value="{{ default_colors.danger|default:'#cf6679' }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="success-color">Success Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="success-color" name="success-color" value="{{ default_colors.success|default:'#03dac6' }}">
+                        <input type="text" class="color-hex" data-for="success-color" value="{{ default_colors.success|default:'#03dac6' }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="info-color">Info Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="info-color" name="info-color" value="{{ default_colors.info|default:'#8bb4fe' }}">
+                        <input type="text" class="color-hex" data-for="info-color" value="{{ default_colors.info|default:'#8bb4fe' }}">
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
