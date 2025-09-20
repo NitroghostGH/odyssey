@@ -1,0 +1,120 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block title %}Create New Theme - Odyssey{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tickets/css/theme-creator.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="theme-creator">
+    <div class="preview-panel">
+        <h2>Theme Preview</h2>
+        <div class="preview-content" id="preview">
+            <!-- Preview content will update as colors are changed -->
+            <div class="preview-header">
+                <h3>Sample Header</h3>
+                <button class="btn-primary">Primary Button</button>
+            </div>
+            <div class="preview-card">
+                <h4>Sample Card</h4>
+                <p>This is how your content will look with the selected colors.</p>
+                <div class="preview-actions">
+                    <button class="btn-secondary">Secondary</button>
+                    <button class="btn-accent">Accent</button>
+                </div>
+            </div>
+            <div class="preview-text">
+                <p>Regular text will look like this</p>
+                <a href="#">Links will use the accent color</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="creator-panel">
+        <h2>Create New Theme</h2>
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="theme-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="theme-name">Theme Name</label>
+                <input type="text" id="theme-name" name="name" required>
+            </div>
+
+            <div class="color-inputs">
+                <div class="color-group">
+                    <label for="primary-color">Primary Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="primary-color" name="primary-color" value="{{ default_colors.primary }}">
+                        <input type="text" class="color-hex" data-for="primary-color" value="{{ default_colors.primary }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="secondary-color">Secondary Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="secondary-color" name="secondary-color" value="{{ default_colors.secondary }}">
+                        <input type="text" class="color-hex" data-for="secondary-color" value="{{ default_colors.secondary }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="background-color">Background Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="background-color" name="background-color" value="{{ default_colors.background }}">
+                        <input type="text" class="color-hex" data-for="background-color" value="{{ default_colors.background }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="surface-color">Surface Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="surface-color" name="surface-color" value="{{ default_colors.surface }}">
+                        <input type="text" class="color-hex" data-for="surface-color" value="{{ default_colors.surface }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="text-color">Text Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="text-color" name="text-color" value="{{ default_colors.text }}">
+                        <input type="text" class="color-hex" data-for="text-color" value="{{ default_colors.text }}">
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <label for="accent-color">Accent Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="accent-color" name="accent-color" value="{{ default_colors.accent }}">
+                        <input type="text" class="color-hex" data-for="accent-color" value="{{ default_colors.accent }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is-public" name="is_public">
+                    <label for="is-public">Make theme public</label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save Theme</button>
+                <a href="{{ request.GET.next|default:'/' }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'tickets/js/theme-creator.js' %}"></script>
+{% endblock %}

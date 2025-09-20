@@ -1,0 +1,191 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tickets/css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-page-wrapper">
+  <div class="ticket-form-container card-panel">
+    <div class="form-header">
+        <h1 class="form-title">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Ticket</h1>
+        <p class="form-subtitle">{% if form.instance.pk %}Update the details for this ticket{% else %}Create a new ticket for this board{% endif %}</p>
+    </div>
+
+  <form method="post" class="ticket-form" novalidate {% if ticket %}action="{% url 'tickets:ticket-edit' ticket.id %}"{% elif board %}action="{% url 'tickets:ticket_new' board.id %}"{% endif %}>
+        {% csrf_token %}
+    {% if ticket %}
+    <input type="hidden" name="comment_mode" value="0" id="ticket-edit-mode-flag">
+    {% endif %}
+    {% if form.errors %}
+    <div class="form-errors" style="background:#ffe6e6;border:1px solid #ffcdcd;padding:.75rem;margin-bottom:1rem;border-radius:4px;">
+      <strong>There were problems saving the ticket:</strong>
+      <ul style="margin:.5rem 0 0 .9rem;">
+      {% for field, errors in form.errors.items %}
+        <li><strong>{{ field }}:</strong> {{ errors|join:', ' }}</li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+        </div>
+    <div class="form-group">
+      <label for="{{ form.status.id_for_label }}">Status</label>
+      {{ form.status }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.priority.id_for_label }}">Priority (Label)</label>
+      {{ form.priority }}
+    </div>
+        <div class="form-group">
+            <label for="{{ form.ticket_type.id_for_label }}">Type</label>
+            {{ form.ticket_type }}
+            <small class="help-text">Epic has no parent. Ticket may have an Epic parent. Bug must have a Ticket parent.</small>
+        </div>
+        <div class="form-group" id="parent-field-wrapper">
+            <label for="{{ form.parent.id_for_label }}">Parent</label>
+            {{ form.parent }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.assignee.id_for_label }}">Assigned To</label>
+            {{ form.assignee }}
+        </div>
+    <div class="form-group">
+      <label for="id_importance">Importance (1-10)</label>
+      {{ form.importance }}
+      <small class="help-text">Choose the business/value impact level.</small>
+    </div>
+    <div class="form-group">
+      <label for="id_urgency">Urgency (1-10)</label>
+      {{ form.urgency }}
+      <small class="help-text">Choose how time-critical this is.</small>
+    </div>
+        <div class="form-group">
+            <label>Priority Score</label>
+            <div id="priority-score" class="priority-score-box">—</div>
+            <small class="help-text">Priority Score = Importance × Urgency (range 1–100).</small>
+        </div>
+    {# Hidden board field to preserve association on edit posts #}
+    {% if board %}
+      <input type="hidden" name="board" value="{{ board.id }}">
+    {% elif ticket %}
+      <input type="hidden" name="board" value="{{ ticket.board.id }}">
+    {% endif %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary solid">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Ticket
+            </button>
+            <a href="javascript:history.back()" class="btn btn-secondary outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y1="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+  {% if ticket %}
+  <div class="comments-section card-panel" style="margin-top:1.5rem;">
+    <h2 style="margin-top:0;">Comments</h2>
+    <form method="post" style="margin-bottom:1rem;">
+      {% csrf_token %}
+      <input type="hidden" name="comment_mode" value="1">
+      <div class="form-group">
+        <label for="id_comment_body">Add Comment</label>
+        <textarea name="comment_body" id="id_comment_body" rows="3" class="form-control" placeholder="Share an update..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-secondary">Post Comment</button>
+    </form>
+    <ul class="comment-list" style="list-style:none;padding-left:0;">
+      {% for c in comments %}
+      <li class="comment-item" style="border-bottom:1px solid #eee;padding:.5rem 0;">
+        <div style="font-size:.75rem;opacity:.7;">{{ c.user.username|default:'(user deleted)' }} • {{ c.created_at|timesince }} ago</div>
+        <div style="white-space:pre-wrap;">{{ c.body }}</div>
+      </li>
+      {% empty %}
+      <li style="opacity:.6;">No comments yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input, select, textarea').forEach(el => el.classList.add('form-control'));
+  const importance = document.getElementById('id_importance');
+  const urgency = document.getElementById('id_urgency');
+  const scoreBox = document.getElementById('priority-score');
+  function updateScore(){
+    const impVal = parseInt(importance.value||'0',10);
+    const urgVal = parseInt(urgency.value||'0',10);
+    if(impVal && urgVal){
+      const score = impVal * urgVal;
+      scoreBox.textContent = score;
+    } else {
+      scoreBox.textContent = '—';
+    }
+  }
+  ['change','input'].forEach(evt => { importance.addEventListener(evt, updateScore); urgency.addEventListener(evt, updateScore); });
+  updateScore();
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const typeSelect = document.getElementById('id_ticket_type');
+  const parentSelect = document.getElementById('id_parent');
+  const parentWrapper = document.getElementById('parent-field-wrapper');
+  if(!typeSelect || !parentSelect) return;
+
+  // Cache original option sets grouped by ticket_type compatibility.
+  const allOptions = Array.from(parentSelect.options).map(o => ({value: o.value, text: o.text}));
+
+  function filterParentOptions() {
+    const tType = typeSelect.value;
+    // Show/hide wrapper for epics
+    if (tType === 'epic') {
+      parentWrapper.style.display = 'none';
+    } else {
+      parentWrapper.style.display = '';
+    }
+    // Clear current options
+    while(parentSelect.firstChild) parentSelect.removeChild(parentSelect.firstChild);
+    // Always add empty option
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = '---------';
+    parentSelect.appendChild(empty);
+    let allowedType = null;
+    if (tType === 'ticket') allowedType = 'epic';
+    else if (tType === 'bug') allowedType = 'ticket';
+    if (!allowedType) return; // epic type – no parents
+    // Filter options by label heuristic: we cannot know type in label; rely on server already giving correct subset.
+    // fallback: keep all existing options (already filtered by form __init__).
+    allOptions.forEach(opt => {
+      if (!opt.value) return; // skip duplicate empty
+      // We keep all because server already filtered; logic placeholder for future enhancement.
+      const optionEl = document.createElement('option');
+      optionEl.value = opt.value;
+      optionEl.textContent = opt.text;
+      parentSelect.appendChild(optionEl);
+    });
+  }
+
+  typeSelect.addEventListener('change', filterParentOptions);
+  filterParentOptions();
+});
+</script>
+{% endblock %}

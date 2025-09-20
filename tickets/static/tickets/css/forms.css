@@ -1,0 +1,212 @@
+/* Priority matrix styles */
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.content-header {
+    margin-bottom: 2rem;
+}
+
+.content-header h1 {
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 500;
+}
+
+.ticket-edit-form {
+    background: var(--surface-color);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Matrix container - see matrix.css for details */
+
+/* (Removed legacy epic form styles) */
+
+.matrix-cell.selected {
+    background: var(--primary-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.matrix-cell .priority-score {
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.matrix-cell:hover .priority-tooltip {
+    display: block;
+}
+
+.priority-tooltip {
+    display: none;
+    position: absolute;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 4px;
+    width: 200px;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.matrix-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.matrix-axis-label {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.matrix-side-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    grid-row: span 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* Form layout improvements */
+.ticket-edit-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Full page wrapper centers the card */
+.form-page-wrapper {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem 4rem;
+}
+
+.ticket-form-container.card-panel {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.25rem 2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03) inset;
+}
+
+.form-header { margin-bottom: 1.5rem; }
+.form-title { margin: 0 0 .25rem; font-size: 1.75rem; font-weight: 600; color: var(--text-color); }
+.form-subtitle { margin: 0; color: var(--text-color); opacity: .75; }
+
+.ticket-form .form-group { margin-bottom: 1.25rem; }
+.ticket-form label { display:block; font-weight:500; margin-bottom:.4rem; }
+.ticket-form input[type=text],
+.ticket-form select,
+.ticket-form textarea { width:100%; background: var(--background-color); border:1px solid var(--border-color); color: var(--text-color); padding:.65rem .75rem; border-radius:6px; font:inherit; }
+.ticket-form textarea { min-height:140px; resize: vertical; }
+.ticket-form input:focus, .ticket-form select:focus, .ticket-form textarea:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
+
+.form-actions { display:flex; gap:.75rem; margin-top:1.5rem; }
+.btn { cursor:pointer; border:none; display:inline-flex; align-items:center; gap:.5rem; font:inherit; font-weight:500; border-radius:6px; text-decoration:none; }
+.btn.solid { background: var(--primary-color); color:#fff; padding:.65rem 1.1rem; }
+.btn.solid:hover { background: var(--accent-color); }
+.btn.outline { background: transparent; border:1px solid var(--border-color); color: var(--text-color); padding:.6rem 1.05rem; }
+.btn.outline:hover { background: var(--border-color); }
+
+/* Nav new ticket button */
+.nav-action.new-ticket-nav { background: var(--primary-color); color:#fff; padding:.5rem .9rem; border-radius:6px; border:1px solid var(--accent-color); display:inline-flex; align-items:center; gap:.4rem; text-decoration:none; font-weight:500; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+.nav-action.new-ticket-nav:hover { background: var(--accent-color); }
+
+@media (max-width: 900px){
+    .ticket-form-container.card-panel { padding:1.5rem 1.25rem; }
+    .form-page-wrapper { padding-top:1rem; }
+    .form-title { font-size:1.5rem; }
+}
+
+.form-main-section {
+    background: var(--surface-color);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-side-section {
+    background: var(--surface-color);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    position: sticky;
+    top: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--background-color);
+    color: var(--text-color);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.submit-button {
+    background: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.submit-button:hover {
+    background: var(--accent-color);
+}
+
+/* Priority level indicators */
+.priority-level {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.priority-critical { background: #cf6679; }
+.priority-high { background: #bb86fc; }
+.priority-medium { background: #03dac6; }
+.priority-low { background: #8bb4fe; }
+.priority-trivial { background: #6649a8; }

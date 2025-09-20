@@ -1,0 +1,186 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tickets/css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <div class="content-header">
+        <h1>{{ title }}</h1>
+    </div>
+    <div class="ticket-edit-form">
+        <form method="post" class="form-main-section">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_title">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="form-error">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_description">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="form-error">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_epic">Epic</label>
+                {{ form.epic }}
+                {% if form.epic.errors %}
+                    <div class="form-error">{{ form.epic.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_assignee">Assigned To</label>
+                {{ form.assignee }}
+                {% if form.assignee.errors %}
+                    <div class="form-error">{{ form.assignee.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_status">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="form-error">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+
+            <a href="{% url 'board-view' ticket.board.id %}" class="btn btn-secondary">
+                Back to Board
+            </a>
+        </form>
+    </div>
+
+    <div class="form-side-section">
+        <h3>Priority Matrix</h3>
+        <p>Select the importance and urgency levels for this ticket</p>
+        
+        <div class="priority-matrix">
+            <div class="matrix-labels">
+                <span class="matrix-axis-label">Importance →</span>
+            </div>
+            <div class="matrix-side-label">← Urgency</div>
+            
+            <!-- Matrix cells: 5x5 grid -->
+            {% for i in "54321" %}
+                {% for j in "12345" %}
+                    <div class="matrix-cell" 
+                         data-importance="{{ j }}" 
+                         data-urgency="{{ i }}"
+                         data-score="{{ j|add:i|add:'-2' }}">
+                        <span class="priority-score">P{{ j|add:i|add:'-2' }}</span>
+                        <div class="priority-tooltip">
+                            <strong>Importance Level {{ j }}:</strong><br>
+                            {% if j == '5' %}
+                            Critical – Essential for core strategy or major security/legal risk
+                            {% elif j == '4' %}
+                            High – Significant value to many users or key roadmap item
+                            {% elif j == '3' %}
+                            Medium – Meaningful improvement or highly requested feature
+                            {% elif j == '2' %}
+                            Low – Minor enhancement or edge-case bug
+                            {% else %}
+                            Trivial – Cosmetic issue or has easy workaround
+                            {% endif %}
+                            <br><br>
+                            <strong>Urgency Level {{ i }}:</strong><br>
+                            {% if i == '5' %}
+                            Immediate – Production outage or active data loss
+                            {% elif i == '4' %}
+                            High – Blocking team or imminent deadline
+                            {% elif i == '3' %}
+                            Medium – Needed for current sprint
+                            {% elif i == '2' %}
+                            Low – Can be scheduled for future sprint
+                            {% else %}
+                            None – No deadline, can be backlogged
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <input type="hidden" name="importance" id="id_importance" value="{{ form.importance.value|default:1 }}">
+        <input type="hidden" name="urgency" id="id_urgency" value="{{ form.urgency.value|default:1 }}">
+
+        <div class="current-priority">
+            <p>Current Priority Level: <span id="priority-level" class="priority-level">Medium</span></p>
+        </div>
+
+        <button type="submit" class="submit-button">Save Changes</button>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importanceInput = document.getElementById('id_importance');
+    const urgencyInput = document.getElementById('id_urgency');
+    const cells = document.querySelectorAll('.matrix-cell');
+    const priorityLevel = document.getElementById('priority-level');
+    const form = document.querySelector('form');
+
+    // Add form-control class to all form inputs
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.classList.add('form-control');
+    });
+
+    function updateSelectedCell() {
+        cells.forEach(cell => cell.classList.remove('selected'));
+        const selectedCell = document.querySelector(
+            `.matrix-cell[data-importance="${importanceInput.value}"][data-urgency="${urgencyInput.value}"]`
+        );
+        if (selectedCell) {
+            selectedCell.classList.add('selected');
+            updatePriorityLevel(selectedCell.dataset.score);
+        }
+    }
+
+    function updatePriorityLevel(score) {
+        let level;
+        if (score >= 9) level = 'Critical';
+        else if (score >= 7) level = 'High';
+        else if (score >= 5) level = 'Medium';
+        else if (score >= 3) level = 'Low';
+        else level = 'Trivial';
+
+        priorityLevel.textContent = level;
+        priorityLevel.className = `priority-level priority-${level.toLowerCase()}`;
+    }
+
+    cells.forEach(cell => {
+        cell.addEventListener('click', function() {
+            const importance = this.dataset.importance;
+            const urgency = this.dataset.urgency;
+            
+            importanceInput.value = importance;
+            urgencyInput.value = urgency;
+            
+            updateSelectedCell();
+        });
+    });
+
+    // Make the submit button in the side section submit the form
+    const sideSubmitButton = document.querySelector('.form-side-section .submit-button');
+    if (sideSubmitButton && form) {
+        sideSubmitButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            form.submit();
+        });
+    }
+
+    // Initialize with current values
+    updateSelectedCell();
+});
+</script>
+{% endblock %}

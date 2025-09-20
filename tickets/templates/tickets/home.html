@@ -1,0 +1,48 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tickets/css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-header">
+    <h1>Odyssey</h1>
+    <div class="tabs">
+        <button onclick="showTab('board')" id="tab-board" class="tab-button active">Board</button>
+        <button onclick="showTab('admin')" id="tab-admin" class="tab-button">Admin</button>
+    </div>
+</div>
+<div id="content-board" class="tab-content">
+    <div class="boards-list">
+        <h2>Your Boards</h2>
+        <div class="board-grid">
+            {% for board in boards %}
+            <div class="board-card">
+                <h3>{{ board.name }}</h3>
+                <p>{{ board.description }}</p>
+                <div class="board-meta">
+                    <span class="ticket-count">{{ board.ticket_set.count }} tickets</span>
+                    <a href="{% url 'board-view' board.id %}" class="btn-primary">View Board</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <p>No boards found. Contact an administrator to create one.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<div id="content-admin" style="display:none;">
+  <iframe src="/admin/" style="width:100%;height:80vh;border:none;"></iframe>
+</div>
+<script>
+function showTab(tab) {
+  document.getElementById('content-board').style.display = (tab === 'board') ? '' : 'none';
+  document.getElementById('content-admin').style.display = (tab === 'admin') ? '' : 'none';
+  document.getElementById('tab-board').style.background = (tab === 'board') ? '#e0e0e0' : '';
+  document.getElementById('tab-admin').style.background = (tab === 'admin') ? '#e0e0e0' : '';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+.env/
+*.venv/
+
+# Django stuff
+*.log
+local_settings.py
+media/
+staticfiles/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Coverage / testing
+htmlcov/
+.coverage
+.coverage.*
+.cache/
+.pytest_cache/
+
+# Migrations you might want to keep; comment out if excluding
+# */migrations/__pycache__/
+# */migrations/*.pyc
+
+# Environment variables
+.env.*

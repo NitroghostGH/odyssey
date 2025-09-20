@@ -1,0 +1,230 @@
+/* Board Layout */
+.board-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: var(--background-color); /* Explicitly set background color */
+}
+
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.board-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--primary-color);
+    border-radius: 4px;
+    color: var(--text-on-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.new-ticket-btn {
+    background: var(--primary-color);
+}
+
+.new-ticket-btn:hover {
+    background: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+
+/* Board Columns */
+.board-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.board-column {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.board-column h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--primary-color);
+}
+
+.ticket-list {
+    min-height: 100px;
+    padding: 0.5rem;
+    background-color: var(--background-color);
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.ticket-list.drag-over {
+    background-color: var(--primary-color);
+    opacity: 0.3;
+}
+
+/* Tickets */
+.ticket {
+    background-color: var(--surface-color);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    cursor: move;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ticket:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.ticket.dragging {
+    opacity: 0.5;
+}
+
+.ticket-header {
+    margin-bottom: 0.5rem;
+}
+
+.ticket-title {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ticket-title:hover {
+    text-decoration: underline;
+}
+
+.ticket-desc {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.ticket-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.ticket-id {
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.ticket-parent-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.ticket-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.ticket-status.todo {
+    background-color: var(--info-color);
+    color: var(--surface-color);
+}
+
+.ticket-status.in_progress {
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+}
+
+.ticket-status.done {
+    background-color: var(--success-color);
+    color: var(--surface-color);
+}
+
+/* Activity Panel */
+.activity-panel {
+    margin-top: 2rem;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.activity-list {
+    margin-top: 1rem;
+}
+
+.activity-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.activity-user {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.activity-time {
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+/* Message Container */
+.message-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.message {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease;
+}
+
+.message-success {
+    background-color: var(--success-color);
+}
+
+.message-error {
+    background-color: var(--danger-color);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

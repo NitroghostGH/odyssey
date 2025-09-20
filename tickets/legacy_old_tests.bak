@@ -1,0 +1,235 @@
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from .models import Board, Ticket, Epic, TicketActivity
+
+class BoardModelTest(TestCase):
+    def test_str(self):
+        board = Board.objects.create(name='Test Board')
+        self.assertEqual(str(board), 'Test Board')
+
+class TicketModelTest(TestCase):
+    def setUp(self):
+        self.board = Board.objects.create(name='Dev Board')
+        self.user = get_user_model().objects.create(username='testuser')
+
+    def test_importance_above_10_invalid(self):
+        ticket = Ticket(title='Bug', board=self.board, importance=11)
+        with self.assertRaises(Exception):
+            ticket.full_clean()
+
+    def test_importance_below_1_invalid(self):
+        ticket = Ticket(title='Bug', board=self.board, importance=0)
+        with self.assertRaises(Exception):
+            ticket.full_clean()
+
+    def test_urgency_above_10_invalid(self):
+        ticket = Ticket(title='Bug', board=self.board, urgency=11)
+        with self.assertRaises(Exception):
+            ticket.full_clean()
+
+    def test_urgency_below_1_invalid(self):
+        ticket = Ticket(title='Bug', board=self.board, urgency=0)
+        with self.assertRaises(Exception):
+            ticket.full_clean()
+
+    def test_str(self):
+        ticket = Ticket.objects.create(
+            title='Bug', 
+            board=self.board
+        )
+        self.assertEqual(str(ticket), 'Bug')
+
+    def test_default_status_and_priority(self):
+        ticket = Ticket.objects.create(
+            title='Bug', 
+            board=self.board
+        )
+        self.assertEqual(ticket.status, 'todo')
+        self.assertEqual(ticket.priority, 'medium')  # Default priority
+
+    def test_assignee(self):
+        ticket = Ticket.objects.create(
+            title='Bug', 
+            board=self.board, 
+            assignee=self.user
+        )
+        self.assertEqual(ticket.assignee, self.user)
+
+class BoardViewTest(TestCase):
+    def setUp(self):
+        # Create and log in a test user
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client = Client()
+        self.client.login(username='testuser', password='12345')
+        
+        # Create test data
+        self.board = Board.objects.create(name='QA Board')
+        self.ticket1 = Ticket.objects.create(
+            title='T1', 
+            board=self.board, 
+            status='todo'
+        )
+        self.ticket2 = Ticket.objects.create(
+            title='T2', 
+            board=self.board, 
+            status='done'
+        )
+
+    def test_board_view_status_code(self):
+        url = reverse('board-view', args=[self.board.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_board_view_context(self):
+        url = reverse('board-view', args=[self.board.id])
+        response = self.client.get(url)
+        self.assertIn('grouped', response.context)
+        grouped_tickets = response.context['grouped']
+        self.assertIn('by_status', grouped_tickets)
+        self.assertIn(self.ticket1, grouped_tickets['by_status']['todo'])
+        self.assertIn(self.ticket2, grouped_tickets['by_status']['done'])
+
+class HomeViewTest(TestCase):
+    def setUp(self):
+        # Create and log in a test user
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client = Client()
+        self.client.login(username='testuser', password='12345')
+        
+        # Create test data
+        self.board = Board.objects.create(name='Main Board')
+
+    def test_home_view_status_code(self):
+        url = reverse('home')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_view_lists_boards(self):
+        url = reverse('home')
+        response = self.client.get(url)
+        self.assertContains(response, 'Main Board')
+
+class DragDropTest(TestCase):
+    def setUp(self):
+        # Create and log in a test user
+        self.user = User.objects.create_user(username='testuser', password='12345', is_staff=True)
+        self.client = Client()
+        self.client.login(username='testuser', password='12345')
+        
+        # Create test data
+        self.board = Board.objects.create(name='Test Board')
+        self.ticket = Ticket.objects.create(
+            title='Test Ticket',
+            board=self.board,
+            status='todo',
+            priority='medium'
+        )
+
+    def test_update_ticket_position(self):
+        url = reverse('update-ticket-position')
+        data = {
+            'ticket_id': self.ticket.id,
+            'importance': 5,
+            'urgency': 8
+        }
+        response = self.client.post(
+            url,
+            data,
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        
+        # Refresh ticket from database
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.importance, 5)
+        self.assertEqual(self.ticket.urgency, 8)
+
+class TicketCreationFormTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='creator', password='pass123')
+        self.client = Client()
+        self.client.login(username='creator', password='pass123')
+        self.board = Board.objects.create(name='Dev Board')
+
+    def test_create_ticket_basic(self):
+        url = reverse('tickets:ticket-new', args=[self.board.id])
+        data = {
+            'title': 'New Ticket',
+            'description': 'Some description',
+            'status': 'todo',
+            'priority': 'medium',
+            'importance': 5,
+            'urgency': 5,
+            'board': self.board.id,
+            'epic': '',
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Ticket.objects.filter(title='New Ticket').exists())
+        ticket = Ticket.objects.get(title='New Ticket')
+        self.assertEqual(ticket.importance, 5)
+        self.assertEqual(ticket.urgency, 5)
+
+    def test_create_ticket_with_new_epic(self):
+        url = reverse('tickets:ticket-new', args=[self.board.id])
+        data = {
+            'title': 'Story A',
+            'description': 'Implements feature X',
+            'status': 'todo',
+            'priority': 'high',
+            'importance': 7,
+            'urgency': 6,
+            'board': self.board.id,
+            'new_epic': True,
+            'epic_name': 'Epic Alpha',
+            'epic_description': 'Top level initiative',
+            'epic': '',
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        # Epic should be created
+        self.assertTrue(Epic.objects.filter(name='Epic Alpha').exists())
+        ticket = Ticket.objects.get(title='Story A')
+        self.assertIsNotNone(ticket.epic)
+        self.assertEqual(ticket.epic.name, 'Epic Alpha')
+
+    def test_activity_logged_on_creation(self):
+        url = reverse('tickets:ticket-new', args=[self.board.id])
+        data = {
+            'title': 'Tracked Ticket',
+            'description': 'Should log activity',
+            'status': 'todo',
+            'priority': 'medium',
+            'importance': 4,
+            'urgency': 3,
+            'board': self.board.id,
+            'epic': '',
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        ticket = Ticket.objects.get(title='Tracked Ticket')
+        self.assertTrue(TicketActivity.objects.filter(ticket=ticket, activity_type='created').exists())
+
+class TicketValidationEdgeCasesTest(TestCase):
+    def setUp(self):
+        self.board = Board.objects.create(name='Validation Board')
+
+    def test_importance_and_urgency_bounds(self):
+        t = Ticket(title='Bounds', board=self.board, importance=1, urgency=10)
+        # Should clean fine
+        t.full_clean()
+        t.importance = 10
+        t.urgency = 1
+        t.full_clean()
+
+    def test_invalid_values_raise(self):
+        t = Ticket(title='Invalid', board=self.board, importance=0, urgency=5)
+        with self.assertRaises(ValidationError):
+            t.full_clean()
+        t2 = Ticket(title='Invalid2', board=self.board, importance=5, urgency=11)
+        with self.assertRaises(ValidationError):
+            t2.full_clean()

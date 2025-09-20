@@ -1,0 +1,148 @@
+/* Base styles */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+/* Modern Navigation Bar */
+.main-nav {
+    background-color: var(--surface-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: color 0.2s ease;
+}
+
+.nav-brand:hover {
+    color: var(--accent-color);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.settings-dropdown {
+    position: relative;
+}
+
+.settings-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background-color: var(--border-color);
+}
+
+.settings-btn i {
+    font-size: 1rem;
+}
+
+.dropdown-content {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.settings-dropdown:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-content a {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    display: block;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--border-color);
+}
+
+.user-name {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.login-btn {
+    color: var(--text-color);
+    text-decoration: none;
+    background-color: var(--primary-color);
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.login-btn:hover {
+    background-color: var(--accent-color);
+}
+
+/* Main content area */
+.content {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .main-nav {
+        padding: 0.5rem 1rem;
+    }
+    
+    .nav-brand {
+        font-size: 1.25rem;
+    }
+    
+    .nav-links {
+        gap: 1rem;
+    }
+    
+    .settings-btn {
+        padding: 0.4rem 0.75rem;
+    }
+}

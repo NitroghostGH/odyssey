@@ -1,0 +1,141 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tickets/css/board.css' %}">
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="board-container">
+    <div class="board-header">
+        <h1>{{ board.name }}</h1>
+        <div class="ticket-type-filters">
+            <button type="button" class="filter-btn active" data-filter="all">All</button>
+            <button type="button" class="filter-btn" data-filter="epic">Epics</button>
+            <button type="button" class="filter-btn" data-filter="ticket">Tickets</button>
+            <button type="button" class="filter-btn" data-filter="bug">Bugs</button>
+            <small class="filter-hint">Select up to 2 types. "All" toggles everything.</small>
+        </div>
+    </div>
+    
+    <!-- Board Content -->
+    <div class="board-columns">
+        <div class="board-column" data-status="todo">
+            <h2>To Do</h2>
+            <div class="ticket-list" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                {% for ticket in grouped.by_status.todo %}
+                    {% include 'tickets/ticket_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="board-column" data-status="in_progress">
+            <h2>In Progress</h2>
+            <div class="ticket-list" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                {% for ticket in grouped.by_status.in_progress %}
+                    {% include 'tickets/ticket_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="board-column" data-status="done">
+            <h2>Done</h2>
+            <div class="ticket-list" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                {% for ticket in grouped.by_status.done %}
+                    {% include 'tickets/ticket_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-panel">
+        <h3>Recent Activity</h3>
+        <div class="activity-list">
+            {% for activity in recent_activity %}
+            <div class="activity-item">
+                <span class="activity-user">{{ activity.user.username|default:'(system)' }}</span>
+                <strong>{{ activity.activity_type|title }}</strong>
+                on <a href="{% url 'tickets:ticket-edit' activity.ticket.id %}">#{{ activity.ticket.id }}</a>
+                <div class="activity-desc" style="font-size:.75rem; opacity:.8;">{{ activity.description|default:'(no details)' }}</div>
+                <span class="activity-time">{{ activity.timestamp|timesince }} ago</span>
+            </div>
+            {% empty %}
+            <div class="activity-item" style="opacity:.6;">No recent activity.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Message Container for notifications -->
+    <div class="message-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'tickets/js/board.js' %}"></script>
+<script>
+// Ticket type filter logic
+document.addEventListener('DOMContentLoaded', function(){
+    const buttons = Array.from(document.querySelectorAll('.ticket-type-filters .filter-btn'));
+    const ticketCards = () => Array.from(document.querySelectorAll('.ticket'));
+    let activeTypes = new Set(['all']);
+
+    function applyFilters(){
+        if(activeTypes.has('all') || activeTypes.size === 0){
+            // Show all
+            ticketCards().forEach(card => card.style.display='');
+            return;
+        }
+        ticketCards().forEach(card => {
+            const tt = card.getAttribute('data-ticket-type');
+            if(activeTypes.has(tt)) card.style.display=''; else card.style.display='none';
+        });
+    }
+
+    function updateButtonStates(){
+        buttons.forEach(btn => {
+            const f = btn.dataset.filter;
+            const on = activeTypes.has('all') ? (f==='all') : activeTypes.has(f);
+            btn.classList.toggle('active', on);
+        });
+    }
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.dataset.filter;
+            if(filter === 'all'){
+                activeTypes = new Set(['all']);
+            } else {
+                if(activeTypes.has('all')) activeTypes.delete('all');
+                if(activeTypes.has(filter)){
+                    activeTypes.delete(filter);
+                } else {
+                    if(activeTypes.size >= 2){
+                        // Replace oldest (convert set to array to drop first)
+                        const first = activeTypes.values().next().value;
+                        activeTypes.delete(first);
+                    }
+                    activeTypes.add(filter);
+                }
+                if(activeTypes.size === 0) activeTypes.add('all');
+            }
+            // If reselect brings us back to 3 types effectively, prefer All for clarity
+            if(['epic','ticket','bug'].every(t => activeTypes.has(t))) {
+                activeTypes = new Set(['all']);
+            }
+            updateButtonStates();
+            applyFilters();
+        });
+    });
+
+    updateButtonStates();
+    applyFilters();
+});
+</script>
+<style>
+    .ticket-type-filters { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    .ticket-type-filters .filter-btn { border:1px solid #ccc; background:#f7f7f7; padding:.35rem .7rem; border-radius:4px; cursor:pointer; font-size:.85rem; }
+    .ticket-type-filters .filter-btn.active { background:#004b9a; color:#fff; border-color:#004b9a; }
+    .ticket-type-filters .filter-btn:focus { outline:2px solid #004b9a; outline-offset:1px; }
+    .ticket-type-filters .filter-hint { font-size:.7rem; opacity:.65; }
+</style>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% load static %}
+<div class="ticket"
+    draggable="true"
+    ondragstart="handleDragStart(event)"
+    id="ticket-{{ ticket.id }}"
+    data-ticket-id="{{ ticket.id }}"
+    data-ticket-type="{{ ticket.ticket_type }}"
+    data-priority="{{ ticket.priority|default:1000 }}">
+    <div class="ticket-header">
+        <a href="{% url 'tickets:ticket-edit' ticket.id %}" class="ticket-title" draggable="false">{{ ticket.title }}</a>
+    </div>
+    <p class="ticket-desc">{{ ticket.description }}</p>
+    <div class="ticket-meta">
+        <span class="ticket-id" draggable="false">#{{ ticket.id }}</span>
+        {% if ticket.ticket_type != 'epic' and ticket.parent %}
+        <span class="ticket-parent-badge" draggable="false">
+            {{ ticket.parent.title }}
+        </span>
+        {% endif %}
+    </div>
+</div>
