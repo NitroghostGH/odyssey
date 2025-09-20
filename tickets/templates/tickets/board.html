@@ -17,6 +17,18 @@
             <button type="button" class="filter-btn" data-filter="bug">Bugs</button>
             <small class="filter-hint">Select up to 2 types. "All" toggles everything.</small>
         </div>
+        <div class="theme-picker" style="margin-left:auto; display:flex; align-items:center; gap:.5rem;">
+            <label for="theme-selector" style="font-size:.75rem; opacity:.7;">Theme:</label>
+            <select id="theme-selector" class="theme-selector">
+                <option value="">Default</option>
+                {% for t in available_user_themes %}
+                    <option value="{{ t.id }}" {% if user_theme and user_theme.id == t.id %}selected{% endif %}>My: {{ t.name }}</option>
+                {% endfor %}
+                {% for t in available_public_themes %}
+                    <option value="{{ t.id }}" {% if user_theme and user_theme.id == t.id %}selected{% endif %}>Public: {{ t.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
     
     <!-- Board Content -->

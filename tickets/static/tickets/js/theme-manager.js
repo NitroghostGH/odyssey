@@ -23,14 +23,16 @@ class ThemeManager {
     }
 
     async loadTheme(themeId) {
+        if(!themeId){
+            // Reset to default? Could implement clearing custom variables.
+            this.saveThemePreference('');
+            return;
+        }
         try {
             const response = await fetch(`/api/themes/${themeId}/`);
             if (!response.ok) throw new Error('Failed to load theme');
-            
-            const theme = await response.json();
-            window.theme.applyTheme(theme);
-            
-            // Save theme preference
+            const data = await response.json();
+            window.theme.applyTheme(data.colors || {});
             this.saveThemePreference(themeId);
         } catch (error) {
             console.error('Error loading theme:', error);
@@ -41,7 +43,7 @@ class ThemeManager {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         if (!csrfToken) return;
 
-        fetch('/api/themes/set-preference/', {
+    fetch('/api/themes/set-preference/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

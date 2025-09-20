@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .forms import TicketForm
 from .models import Board, Ticket, TicketActivity, TicketComment
+from .models_theme import ThemePreference, UserTheme
 from django.utils.timezone import now
 from django import template
 
@@ -63,8 +64,14 @@ def board_view(request, board_id):
     board = get_object_or_404(Board, id=board_id)
     tickets = Ticket.objects.filter(board=board).order_by('sort_order')
     user_theme = None
-    if hasattr(request.user, 'usertheme_set'):
-        user_theme = request.user.usertheme_set.filter(is_public=True).order_by('-updated_at').first()
+    pref = getattr(request.user, 'theme_preference', None)
+    if pref and pref.theme:
+        user_theme = pref.theme
+    else:
+        # fallback: latest user-owned theme
+        user_theme = UserTheme.objects.filter(user=request.user).order_by('-updated_at').first()
+    all_user_themes = list(UserTheme.objects.filter(user=request.user).values('id','name'))
+    public_themes = list(UserTheme.objects.filter(is_public=True).exclude(user=request.user).values('id','name'))
     grouped = {
         'tickets': tickets,
         'by_status': {
@@ -83,7 +90,9 @@ def board_view(request, board_id):
         'board': board,
         'grouped': grouped,
         'recent_activity': recent_activity,
-        'user_theme': user_theme
+        'user_theme': user_theme,
+        'available_user_themes': all_user_themes,
+        'available_public_themes': public_themes
     })
 
 @login_required

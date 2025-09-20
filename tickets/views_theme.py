@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
-from .models_theme import UserTheme
+from .models_theme import UserTheme, ThemePreference
 from .models import Ticket
 import json
 
@@ -92,6 +92,32 @@ def get_themes(request):
     }
     
     return JsonResponse(themes)
+
+@login_required
+def get_single_theme(request, theme_id):
+    theme = get_object_or_404(UserTheme, id=theme_id)
+    return JsonResponse({'id': theme.id, 'name': theme.name, 'colors': theme.colors, 'is_public': theme.is_public, 'owner': theme.user.username})
+
+@login_required
+def set_theme_preference(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'})
+    try:
+        data = json.loads(request.body)
+        theme_id = data.get('theme_id')
+        theme = None
+        if theme_id == '':
+            theme = None
+        elif theme_id is not None:
+            theme = UserTheme.objects.get(id=theme_id)
+        pref, _ = ThemePreference.objects.get_or_create(user=request.user)
+        pref.theme = theme
+        pref.save()
+        return JsonResponse({'success': True})
+    except UserTheme.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Theme not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
 def delete_theme(request, theme_id):

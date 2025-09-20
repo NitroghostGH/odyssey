@@ -12,7 +12,9 @@ urlpatterns = [
     # Theme management endpoints
     path('themes/create/', views_theme.theme_creator, name='theme-creator'),
     path('api/themes/', views_theme.get_themes, name='get_themes'),
+    path('api/themes/<int:theme_id>/', views_theme.get_single_theme, name='get_single_theme'),
     path('api/themes/save/', views_theme.save_theme, name='save_theme'),
+    path('api/themes/set-preference/', views_theme.set_theme_preference, name='set_theme_preference'),
     path('api/themes/<int:theme_id>/delete/', views_theme.delete_theme, name='delete_theme'),
     
     # Ticket position management
