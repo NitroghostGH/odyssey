@@ -1,0 +1,50 @@
+/* Theme Creator Page Styles */
+:root {
+  --tc-gap: 1rem;
+}
+.theme-creator {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 1000px){
+  .theme-creator { grid-template-columns: 1fr; }
+}
+.preview-panel, .creator-panel {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}
+.preview-panel h2, .creator-panel h2 { margin-top:0; }
+.preview-content {
+  --primary-color: var(--primary-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-gap);
+}
+.preview-header { display:flex; align-items:center; justify-content: space-between; }
+.preview-card { background: var(--background-color); padding:1rem; border-radius:6px; border:1px solid var(--border-color); }
+.preview-actions { display:flex; gap:.5rem; margin-top:.5rem; }
+.preview-text a { color: var(--accent-color); }
+
+.theme-form .form-group { margin-bottom: 1rem; }
+.color-inputs { display:grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 1rem; }
+.color-group label { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; opacity:.75; }
+.color-input-wrapper { display:flex; gap:.35rem; align-items:center; }
+.color-input-wrapper input[type=color] { width:40px; height:40px; padding:0; border:none; background:transparent; cursor:pointer; }
+.color-input-wrapper .color-hex { flex:1; padding:.4rem .5rem; font-family:monospace; font-size:.8rem; border:1px solid var(--border-color); background: var(--background-color); color: var(--text-color); border-radius:4px; }
+
+.checkbox-group { display:flex; align-items:center; gap:.5rem; }
+.form-actions { display:flex; gap:.75rem; }
+.btn-primary, .btn-secondary, .btn-accent { border:none; cursor:pointer; padding:.55rem .9rem; border-radius:4px; font-size:.8rem; font-weight:500; }
+.btn-primary { background: var(--primary-color); color: var(--surface-color); }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background: var(--secondary-color); color: var(--surface-color); }
+.btn-accent { background: var(--accent-color); color: var(--surface-color); }
+.messages { margin-bottom:1rem; }
+.message { padding:.6rem .75rem; border-radius:4px; margin-bottom:.5rem; font-size:.75rem; }
+.message.error { background: var(--danger-color); color: #fff; }
+.message.success { background: var(--success-color); color:#000; }

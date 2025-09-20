@@ -12,7 +12,7 @@ import json
 def theme_creator(request):
     """View for the theme creation page"""
     if request.method == 'POST':
-        theme_name = request.POST.get('name')
+        theme_name = (request.POST.get('name') or '').strip()
         is_public = request.POST.get('is_public') == 'on'
         colors = {
             'primary': request.POST.get('primary-color'),
@@ -29,6 +29,11 @@ def theme_creator(request):
         
         if not theme_name:
             messages.error(request, 'Theme name is required')
+            return redirect('theme-creator')  # early return; do not proceed
+
+        # Prevent duplicate theme names for same user (unique_together user,name)
+        if UserTheme.objects.filter(user=request.user, name=theme_name).exists():
+            messages.error(request, f'You already have a theme named "{theme_name}". Choose a different name.')
             return redirect('theme-creator')
         
         theme = UserTheme.objects.create(
@@ -39,7 +44,12 @@ def theme_creator(request):
         )
         
         messages.success(request, f'Theme "{theme_name}" created successfully!')
-        return redirect('board-view', board_id=request.GET.get('next', 1))
+        next_val = request.GET.get('next')
+        try:
+            board_id = int(next_val) if next_val is not None else 1
+        except ValueError:
+            board_id = 1
+        return redirect('board-view', board_id=board_id)
         
     # Use active theme if one is set (preference then latest user theme) for prefill
     active = None
