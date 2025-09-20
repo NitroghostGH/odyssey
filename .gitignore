@@ -39,3 +39,7 @@ htmlcov/
 
 # Environment variables
 .env.*
+
+# Internal AI assistant instruction files (not needed in public repo)
+.github/instructions/
+.github/instructions/*
