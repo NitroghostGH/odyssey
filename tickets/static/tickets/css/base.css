@@ -44,6 +44,44 @@ body {
     gap: 1.5rem;
 }
 
+/* New Ticket primary action styling */
+.new-ticket-nav {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: #fff !important;
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    text-decoration: none;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset;
+    transition: background .2s ease, transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.new-ticket-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08) inset;
+    border-color: rgba(255,255,255,0.25);
+}
+
+.new-ticket-nav:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4) inset;
+}
+
+.new-ticket-nav:focus-visible {
+    outline: 3px solid var(--info-color);
+    outline-offset: 2px;
+}
+
+.new-ticket-nav i {
+    font-size: .9rem;
+}
+
 .settings-dropdown {
     position: relative;
 }
