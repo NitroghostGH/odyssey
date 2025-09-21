@@ -10,7 +10,8 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: read
+  # id-token must be 'write' for OIDC federation; 'read' can cause retries/noise in some scenarios
+  id-token: write
 
 jobs:
   test-and-build:
@@ -81,6 +82,17 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: odyssey-ci-${{ github.run_id }}
+          # OIDC role assumption sometimes logs repeated 'Assuming role with OIDC' when retries occur.
+          # The action transparently retries on transient sts/identity errors; this is normally safe to ignore.
+
+      - name: AWS identity diagnostic (optional)
+        if: github.event_name != 'pull_request' && secrets.AWS_ROLE_TO_ASSUME != '' && env.AWS_IDENTITY_DEBUG == 'true'
+        run: |
+          echo "Verifying AWS caller identity..."
+          aws sts get-caller-identity
+          echo "Listing ECR repositories (first 5):"
+          aws ecr describe-repositories --query 'repositories[0:5].repositoryName'
 
       - name: Login to Amazon ECR
         if: github.event_name != 'pull_request' && secrets.ECR_REPOSITORY != ''
