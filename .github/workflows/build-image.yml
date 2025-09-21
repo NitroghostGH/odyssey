@@ -18,6 +18,8 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ghcr.io/${{ github.repository }}/odyssey
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,6 +75,42 @@ jobs:
             docker push $IMAGE_NAME:latest
           fi
 
+      - name: Configure AWS credentials (for ECR)
+        if: github.event_name != 'pull_request' && secrets.AWS_ROLE_TO_ASSUME != '' && secrets.AWS_REGION != '' && secrets.ECR_REPOSITORY != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        if: github.event_name != 'pull_request' && secrets.ECR_REPOSITORY != ''
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag & push image to ECR
+        if: github.event_name != 'pull_request' && steps.login-ecr.outcome == 'success' && secrets.ECR_REPOSITORY != ''
+        run: |
+          # Derive ECR image URI (ECR_REPOSITORY should be full URI or repo name). If it lacks a slash, compose it.
+          if [[ "$ECR_REPOSITORY" != *.*amazonaws.com* ]]; then
+            if [ -z "${AWS_REGION}" ]; then echo "AWS_REGION not set; cannot construct ECR URI"; exit 1; fi
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            FULL_ECR_URI="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY"
+          else
+            FULL_ECR_URI="$ECR_REPOSITORY"
+          fi
+          echo "Using ECR image URI: $FULL_ECR_URI"
+          docker tag $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }} $FULL_ECR_URI:${{ steps.meta.outputs.sha_tag }}
+          docker tag $IMAGE_NAME:${{ steps.meta.outputs.branch_tag }} $FULL_ECR_URI:${{ steps.meta.outputs.branch_tag }}
+          if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
+            docker tag $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }} $FULL_ECR_URI:latest
+          fi
+          docker push $FULL_ECR_URI:${{ steps.meta.outputs.sha_tag }}
+          docker push $FULL_ECR_URI:${{ steps.meta.outputs.branch_tag }}
+          if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
+            docker push $FULL_ECR_URI:latest
+          fi
+          echo "ecr_image_uri=$FULL_ECR_URI" >> $GITHUB_OUTPUT
+
       - name: Summary
         run: |
           echo "Pushed tags:" >> $GITHUB_STEP_SUMMARY
@@ -80,4 +118,7 @@ jobs:
           echo "- $IMAGE_NAME:${{ steps.meta.outputs.branch_tag }}" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
             echo "- $IMAGE_NAME:latest" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.login-ecr.outcome }}" ]; then
+            echo "ECR push attempted (see log above)." >> $GITHUB_STEP_SUMMARY
           fi
