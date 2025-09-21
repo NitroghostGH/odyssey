@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.build
+.git
+.gitignore
+venv
+.env
+*.log
+staticfiles
+rewrite-stream.*

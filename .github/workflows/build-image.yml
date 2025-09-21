@@ -1,0 +1,83 @@
+name: CI Build Image
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ghcr.io/${{ github.repository }}/odyssey
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies (test phase)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        run: |
+          python manage.py test --noinput
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        run: |
+          SHA_TAG=${GITHUB_SHA::7}
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "latest_tag=latest" >> $GITHUB_OUTPUT
+          fi
+          # Branch tag (sanitize slashes)
+          BRANCH=${GITHUB_REF#refs/heads/}
+          SAFE_BRANCH=$(echo "$BRANCH" | tr '/' '-')
+          echo "branch_tag=$SAFE_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        run: |
+          docker build -t $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }} .
+          docker tag $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }} $IMAGE_NAME:${{ steps.meta.outputs.branch_tag }}
+          if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
+            docker tag $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }} $IMAGE_NAME:latest
+          fi
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker push $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }}
+          docker push $IMAGE_NAME:${{ steps.meta.outputs.branch_tag }}
+          if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
+            docker push $IMAGE_NAME:latest
+          fi
+
+      - name: Summary
+        run: |
+          echo "Pushed tags:" >> $GITHUB_STEP_SUMMARY
+          echo "- $IMAGE_NAME:${{ steps.meta.outputs.sha_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- $IMAGE_NAME:${{ steps.meta.outputs.branch_tag }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.meta.outputs.latest_tag }}" ]; then
+            echo "- $IMAGE_NAME:latest" >> $GITHUB_STEP_SUMMARY
+          fi
